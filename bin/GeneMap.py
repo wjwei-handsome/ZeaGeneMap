@@ -9,8 +9,19 @@
 @邮箱        :wjwei9908@gmail.com
 '''
 
-import logging
+# from blast.blast import get_rbh_result
 import argparse
+import logging
+import sys
+import pandas as pd
+from types import *
+import os
+from tqdm import tqdm
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(BASE_DIR)
+
+
+tqdm.pandas()
 
 
 def get_args():
@@ -33,4 +44,40 @@ def get_args():
 
 
 args = get_args()
-print(args.evidence_l)
+
+# judge the evidence
+evidence_list = args.evidence_l
+print(evidence_list)
+if any(e not in ['rbh', 'crossmap', 'synteny', 'ortholog'] for e in evidence_list):
+    logging.error('evidence error')
+    exit(1)
+
+# write result
+genelist_fp = args.list
+
+raw_df = pd.read_csv(genelist_fp, sep='\t', header=None)
+assert raw_df.shape[1] == 1, 'genelist file format error'
+raw_df.columns = ['genename']
+
+
+if 'rbh' in args.evidence_l:
+    from src.blast import blast
+    rbh_df = blast.get_rbh_df(args.query_g, args.target_g, args.dir)
+    raw_df['rbh'] = pd.merge(
+        raw_df, rbh_df, on='genename', how='left')['target']
+    raw_df.fillna('None', inplace=True)
+    raw_df.to_csv('test_out.tsv', sep='\t', index=False, header=False)
+else:
+    print('rbh not in evidence list')
+if 'ortholog' in args.evidence_l:
+    ...
+else:
+    print('ortholog not in evidence list')
+if 'synteny' in args.evidence_l:
+    ...
+else:
+    print('synteny not in evidence list')
+if 'crossmap' in args.evidence_l:
+    ...
+else:
+    print('crossmap not in evidence list')
