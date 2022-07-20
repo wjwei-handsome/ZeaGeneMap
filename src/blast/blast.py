@@ -16,7 +16,7 @@ from ..utils.utils import search_file
 #         return result_str
 
 
-def get_rbh_df(query_g, target_g, work_dir, e_filter: float = 1e-10) -> pd.DataFrame:
+def get_rbh_df(query_g: str, target_g: str, work_dir: str, e_filter: float = 1e-10) -> pd.DataFrame:
     q_t_blast_fp, t_q_blast_fp = search_file(
         work_dir, 'blast', query_g, target_g, type='rec')
     print(
