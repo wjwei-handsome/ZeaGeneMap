@@ -37,5 +37,5 @@ def get_rbh_df(query_g: str, target_g: str, work_dir: str, e_filter: float = 1e-
     rbh = rbh.loc[rbh.qseqid_x == rbh.sseqid_y]
     rbh = rbh.groupby(['qseqid_x', 'sseqid_x']).max().reset_index()[
         ['qseqid_x', 'sseqid_x']]
-    rbh.columns = ['genename', 'target']
+    rbh.columns = ['genename', 'rbh']
     return rbh
