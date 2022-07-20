@@ -1,3 +1,4 @@
+import logging
 import os
 import glob
 
@@ -24,3 +25,11 @@ def search_file(work_dir: str,
             return single_search[0]
         else:
             exit(1)
+    elif type == 'ortholog':
+        search = glob.glob(f"{abs_dir_path}/**/?rthogroups.{surfix}")
+        if len(search) == 1:
+            return search[0]
+        else:
+            exit(1)
+    else:
+        logging.error('type error')
