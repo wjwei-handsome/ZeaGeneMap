@@ -135,4 +135,4 @@ dmypy.json
 *.chain.gz
 *.genelist
 *.blast
-*.synteny
+*.anchor
