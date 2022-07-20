@@ -11,6 +11,7 @@
 
 # from blast.blast import get_rbh_result
 import argparse
+from genericpath import exists
 import logging
 import sys
 import pandas as pd
@@ -60,24 +61,44 @@ assert raw_df.shape[1] == 1, 'genelist file format error'
 raw_df.columns = ['genename']
 
 
-if 'rbh' in args.evidence_l:
+if 'rbh' in evidence_list:
     from src.blast import blast
     rbh_df = blast.get_rbh_df(args.query_g, args.target_g, args.dir)
-    raw_df['rbh'] = pd.merge(
-        raw_df, rbh_df, on='genename', how='left')['target']
-    raw_df.fillna('None', inplace=True)
-    raw_df.to_csv('test_out.tsv', sep='\t', index=False, header=False)
+    raw_rbh_merge = pd.merge(
+        raw_df, rbh_df, on='genename', how='left')
+    output_df = raw_rbh_merge
 else:
+    output_df = raw_df
     print('rbh not in evidence list')
-if 'ortholog' in args.evidence_l:
-    ...
+if 'ortholog' in evidence_list:
+    from src.ortholog import ortholog
+    ortholog_df = ortholog.get_ortholog_df(
+        args.query_g, args.target_g, args.dir)
+    raw_ortholog_merge = pd.merge(
+        output_df, ortholog_df, on='genename', how='left')
+    if len(raw_ortholog_merge) != len(raw_df):
+        exit(1)
+    output_df = raw_ortholog_merge
 else:
     print('ortholog not in evidence list')
-if 'synteny' in args.evidence_l:
-    ...
+if 'synteny' in evidence_list:
+    from src.synteny import synteny
+    rec_syn_df = synteny.get_rec_syn_df(
+        args.query_g, args.target_g, args.dir)
+    raw_syn_merge = pd.merge(
+        output_df, rec_syn_df, on='genename', how='left')
+    output_df = raw_syn_merge
 else:
     print('synteny not in evidence list')
-if 'crossmap' in args.evidence_l:
-    ...
+if 'crossmap' in evidence_list:
+    from src.chain import crossmap
+    crossmap_df = crossmap.get_crossmap_df(
+        raw_df, args.query_g, args.target_g, args.dir)
+    raw_crossmap_merge = pd.merge(
+        output_df, crossmap_df, on='genename', how='left')
+    output_df = raw_crossmap_merge
 else:
     print('crossmap not in evidence list')
+
+output_df.fillna('None').to_csv(
+    'test_out.tsv', sep='\t', index=False, header=True)
