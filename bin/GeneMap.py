@@ -11,18 +11,13 @@
 
 # from blast.blast import get_rbh_result
 import argparse
-from genericpath import exists
 import logging
 import sys
 import pandas as pd
-from types import *
+from typing import *
 import os
-from tqdm import tqdm
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(BASE_DIR)
-
-
-tqdm.pandas()
 
 
 def get_args():
