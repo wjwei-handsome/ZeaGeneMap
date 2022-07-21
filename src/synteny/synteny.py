@@ -30,5 +30,5 @@ def get_rec_syn_df(query_g: str, target_g: str, work_dir: str) -> pd.DataFrame:
     rev_syn_df.drop(columns=['target_g_y'], inplace=True)
     rev_syn_df.columns = ['genename', 'synteny']
     rev_syn_df = rev_syn_df.groupby('genename', as_index=False).agg(
-        lambda x: list(x) if len(x) > 1 else x)
+        lambda x: ','.join(list(x)) if len(x) > 1 else x)
     return rev_syn_df
