@@ -26,6 +26,8 @@ def get_ortholog_df(query_g: str, target_g: str, work_dir: str):
     ortholog_df = ortholog_df.explode(query_g)
     ortholog_df = ortholog_df.reset_index(drop=True)
     ortholog_df.columns = ['genename', 'ortholog']
+    ortholog_df['ortholog'] = ortholog_df['ortholog'].map(
+        lambda x: ','.join(x) if isinstance(x, list) else x)
     # ortholog_df = ortholog_df.groupby('genename', as_index=False).agg(
     #     lambda x: list(x) if len(x) > 1 else x)
 
