@@ -6,6 +6,11 @@ import sys
 import logging
 import os
 import glob
+import time
+import pandas as pd
+from tqdm import tqdm
+
+tqdm.pandas()
 
 
 def search_file(work_dir: str,
@@ -68,3 +73,136 @@ def nopen(f, mode="rb"):
 def reader(fname):
     for l in nopen(fname):
         yield l.decode('utf8').strip().replace("\r", "")
+
+
+def check_in_list(choice_list, legal_list, print_list: bool = True):
+    if print_list:
+        print(f"choiced evidence: {choice_list}")
+    if any(item not in legal_list for item in choice_list):
+        logging.error(f'evidence error: please select in {legal_list}')
+        exit(1)
+
+
+def get_time(func):
+    """ a decorator to get the time of a function and return it """
+    def wrapper(*args, **kwargs):
+        start = time.time()
+        res = func(*args, **kwargs)
+        end = time.time()
+        print(f"{func.__name__} cost {end - start}s")
+        return res
+    return wrapper
+
+
+def get_raw_df(genelist_fp) -> pd.DataFrame:
+    # read input gene list
+    raw_df = pd.read_csv(genelist_fp, sep='\t', header=None)
+    # FIXME: check the format
+    assert raw_df.shape[1] == 1, 'genelist file format error'
+    raw_df.columns = ['genename']
+    return raw_df
+
+
+@get_time
+def rbh(args, raw_df):
+    from src.blast import blast
+    rbh_df = blast.get_rbh_df(args.query_g, args.target_g, args.dir)
+    raw_rbh_merge = pd.merge(
+        raw_df, rbh_df, on='genename', how='left')
+    return raw_rbh_merge
+
+
+@get_time
+def ortholog(args, raw_df):
+    from src.ortholog import ortholog
+    ortholog_df = ortholog.get_ortholog_df(
+        args.query_g, args.target_g, args.dir)
+    raw_ortholog_merge = pd.merge(
+        raw_df, ortholog_df, on='genename', how='left')
+    if len(raw_ortholog_merge) != len(raw_df):
+        exit(1)
+    return raw_ortholog_merge
+
+
+@get_time
+def synteny(args, raw_df):
+    from src.synteny import synteny
+    rec_syn_df = synteny.get_rec_syn_df(
+        args.query_g, args.target_g, args.dir)
+    raw_syn_merge = pd.merge(
+        raw_df, rec_syn_df, on='genename', how='left')
+    return raw_syn_merge
+
+
+@get_time
+def crossmap(args, raw_df):
+    from src.chain import crossmap
+    crossmap_df = crossmap.get_crossmap_df(
+        raw_df, args.query_g,
+        args.target_g, args.dir,
+        ratio=args.ratio, overlap=args.overlap
+    )
+    raw_crossmap_merge = pd.merge(
+        raw_df, crossmap_df, on='genename', how='left')
+    return raw_crossmap_merge
+
+
+def get_raw_evd_df(args, raw_df, write: bool = True) -> pd.DataFrame:
+    # get raw df
+    # 1 rbh
+    if 'rbh' in args.evidence_l:
+        output_df = rbh(args, raw_df)
+    else:
+        output_df = raw_df
+        print('rbh not in evidence list')
+    # 2 ortholog
+    if 'ortholog' in args.evidence_l:
+        output_df = ortholog(args, output_df)
+    else:
+        print('ortholog not in evidence list')
+    # 3 synteny
+    if 'synteny' in args.evidence_l:
+        output_df = synteny(args, output_df)
+    else:
+        print('synteny not in evidence list')
+    # 4 crossmap
+    if 'crossmap' in args.evidence_l:
+        output_df = crossmap(args, output_df)
+    else:
+        print('crossmap not in evidence list')
+    output_df.fillna('None', inplace=True)
+    if write:
+        print(f'Writing raw result to {args.output}_raw.tsv')
+        output_df.to_csv(
+            f"{args.output}_raw.tsv", sep='\t', index=False, header=True)
+    return output_df
+
+
+def map_to_list(x):
+    if '@' in x:
+        lst = []
+        for i in x.split(','):
+            g = x.split('@')[0]
+            if g not in lst:
+                lst.append(g)
+        return lst
+    # if x == 'NoneRegion':
+    #     return 'None'
+    else:
+        return [item.strip() for item in x.split(',')]
+
+
+def process_raw(args, raw_evd_df: pd.DataFrame) -> None:
+    print(f'Process raw result to final result: {args.output}_final.tsv')
+    process_df = raw_evd_df.melt(
+        id_vars=['genename'], var_name='evd', value_name='target')
+    process_df['target'] = process_df['target'].progress_apply(map_to_list)
+    process_df = process_df.explode('target')
+    process_df = process_df.drop(
+        process_df[process_df.target == 'None'].index).reset_index(drop=True)
+    process_df = process_df.drop(
+        process_df[process_df.target == 'NoneRegion'].index).reset_index(drop=True)
+    result_df = process_df.groupby(['genename', 'target'], as_index=False).agg({
+        'evd': lambda x: ','.join(x)})
+    result_df.to_csv(f'{args.output}_final.tsv',
+                     sep='\t', index=False, header=True)
