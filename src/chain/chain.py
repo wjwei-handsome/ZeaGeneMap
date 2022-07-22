@@ -2,6 +2,7 @@
 from tqdm import tqdm
 from src.utils import utils
 from bx.intervals.intersection import Interval, Intersecter
+from rich.progress import track
 
 
 def read_chain_file(chain_file, print_table=False):
@@ -38,7 +39,7 @@ def read_chain_file(chain_file, print_table=False):
     if print_table:
         blocks = []
     total_size = len(list(utils.reader(chain_file)))
-    for line in tqdm(utils.reader(chain_file), desc="Reading", colour="green", total=total_size):
+    for line in track(utils.reader(chain_file), description="[bold green]Reading", total=total_size,):
         # Example: chain 4900 chrY 58368225 + 25985403 25985638 chr5 151006098 - 43257292 43257528 1
         if not line.strip():
             continue

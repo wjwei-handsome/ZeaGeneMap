@@ -135,9 +135,10 @@ def get_crossmap_df(raw_df: pd.DataFrame,
                           how='left').drop(columns=['junk'])
     global target_bed
     target_bed = pybedtools.BedTool(t_bed_fp).sort()
-    raw_bed_df['region'] = raw_bed_df.progress_apply(
+    raw_bed_df['region'] = raw_bed_df.apply(
         get_region, axis=1, args=(ratio,))
-
+    print("del bx_ivl")
+    del bx_ivl
     intersect_bed = get_intersect(raw_bed_df['region'], overlap)
     intersect_df = get_intersect_df(intersect_bed)
 

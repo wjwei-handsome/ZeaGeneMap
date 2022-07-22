@@ -8,7 +8,7 @@ import glob
 import time
 import pandas as pd
 from tqdm import tqdm
-from src.utils.logger import logger
+from src.utils.logger import logger, console
 
 tqdm.pandas(desc='Processing', colour='green')
 
@@ -211,17 +211,17 @@ def map_to_list(x):
 
 
 def process_raw(args, raw_evd_df: pd.DataFrame) -> None:
-    _info(f'Process raw result to final result')
-    process_df = raw_evd_df.melt(
-        id_vars=['genename'], var_name='evd', value_name='target')
-    process_df['target'] = process_df['target'].progress_apply(map_to_list)
-    process_df = process_df.explode('target')
-    process_df = process_df.drop(
-        process_df[process_df.target == 'None'].index).reset_index(drop=True)
-    # process_df = process_df.drop(
-    #     process_df[process_df.target == 'NoneRegion'].index).reset_index(drop=True)
-    result_df = process_df.groupby(['genename', 'target'], as_index=False).agg({
-        'evd': lambda x: ','.join(x)})
-    _info(f'Writing final result to {args.output}_final.tsv')
-    result_df.to_csv(f'{args.output}_final.tsv',
-                     sep='\t', index=False, header=True)
+    with console.status(f"[bold green]Processing raw result to final result") as s:
+        process_df = raw_evd_df.melt(
+            id_vars=['genename'], var_name='evd', value_name='target')
+        process_df['target'] = process_df['target'].map(map_to_list)
+        process_df = process_df.explode('target')
+        process_df = process_df.drop(
+            process_df[process_df.target == 'None'].index).reset_index(drop=True)
+        # process_df = process_df.drop(
+        #     process_df[process_df.target == 'NoneRegion'].index).reset_index(drop=True)
+        result_df = process_df.groupby(['genename', 'target'], as_index=False).agg({
+            'evd': lambda x: ','.join(x)})
+        result_df.to_csv(
+            f"{args.output}_result.tsv", sep='\t', index=False, header=True)
+    _info(f'Writing final result to {args.output}_result.tsv')

@@ -17,10 +17,21 @@ import os
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(BASE_DIR)
 from src.utils import utils
-from src.utils.logger import logger
+from src.utils.logger import print
 
 
 LEGAL_EVIDENCES = ['rbh', 'crossmap', 'synteny', 'ortholog']
+
+LOGO = """[bold green]
+ _____                ___  ___            |
+|  __ \               |  \/  |            | Author: Wenjie Wei
+| |  \/ ___ _ __   ___| .  . | __ _ _ __  | Email: wjwei9908@gmail.com
+| | __ / _ \ '_ \ / _ \ |\/| |/ _` | '_ \ | Contribute: Wenjie Wei;Songtao Gui;Han Xiao
+| |_\ \  __/ | | |  __/ |  | | (_| | |_) || Department: HZAU-Maize-Bioinformatics
+ \____/\___|_| |_|\___\_|  |_/\__,_| .__/ |
+                                   | |    |
+                                   |_|    |
+"""
 
 
 def get_args():
@@ -29,31 +40,33 @@ def get_args():
         description=__doc__, prog='GeneMap.py')
 
     # required arguments
-    parser.add_argument('-l', '--list', action='store',
-                        help='genename list file', required=True, dest='list')
-    parser.add_argument('-d', '--dir', action='store',
-                        help='work dir', required=True, default='.', dest='dir')
-    parser.add_argument('-q', '--query', action='store',
-                        help='query genome', required=True, dest='query_g')
-    parser.add_argument('-t', '--target', action='store',
-                        help='target genome', required=True, dest='target_g')
-    parser.add_argument('-o', '--output', action='store',
-                        help='output prefix', required=True, dest='output')
+    required_parser = parser.add_argument_group('required arguments')
+    required_parser.add_argument('-l', '--list', action='store',
+                                 help='genename list file', required=True, dest='list')
+    required_parser.add_argument('-d', '--dir', action='store',
+                                 help='work dir', required=True, default='.', dest='dir')
+    required_parser.add_argument('-q', '--query', action='store',
+                                 help='query genome', required=True, dest='query_g')
+    required_parser.add_argument('-t', '--target', action='store',
+                                 help='target genome', required=True, dest='target_g')
+    required_parser.add_argument('-o', '--output', action='store',
+                                 help='output prefix', required=True, dest='output')
 
     # options arguments
-    parser.add_argument('-e', '--evidence',
-                        help='evidence list', nargs='+', dest='evidence_l',
-                        default=['rbh', 'crossmap', 'synteny', 'ortholog'])
-    parser.add_argument('-r', '--ratio', action='store',
-                        help='crossmap ratio', default=0.8, dest='ratio')
-    parser.add_argument('-p', '--overlap', action='store',
-                        help='overlap fraction', default=0.8, dest='overlap')
+    option_parser = parser.add_argument_group('optional arguments')
+    option_parser.add_argument('-e', '--evidence',
+                               help='evidence list', nargs='+', dest='evidence_l',
+                               default=['rbh', 'crossmap', 'synteny', 'ortholog'])
+    option_parser.add_argument('-r', '--ratio', action='store',
+                               help='crossmap ratio', default=0.8, dest='ratio')
+    option_parser.add_argument('-p', '--overlap', action='store',
+                               help='overlap fraction', default=0.8, dest='overlap')
 
     return parser.parse_args()
 
 
 def main():
-    logger.info('start')
+    print(LOGO)
     # get args
     args = get_args()
 
