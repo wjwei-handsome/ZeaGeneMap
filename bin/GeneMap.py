@@ -31,7 +31,7 @@ LOGO = """[bold green]
  \____/\___|_| |_|\___\_|  |_/\__,_| .__/ |
                                    | |    |
                                    |_|    |
-demo: python3 GeneMap.py -l list.txt -d work_dir -q GenomeA -t GenomeB -o output_prefix
+demo: GeneMap.py -l list.txt -d work_dir -q GenomeA -t GenomeB -o output_prefix
 """
 
 
