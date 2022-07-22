@@ -4,7 +4,7 @@ import pybedtools
 from src.chain import chain
 from tqdm import tqdm
 
-from ..utils.utils import search_file
+from src.utils.utils import search_file
 from src.utils.logger import logger
 
 tqdm.pandas(desc='Processing', colour='green')
@@ -137,8 +137,6 @@ def get_crossmap_df(raw_df: pd.DataFrame,
     target_bed = pybedtools.BedTool(t_bed_fp).sort()
     raw_bed_df['region'] = raw_bed_df.apply(
         get_region, axis=1, args=(ratio,))
-    print("del bx_ivl")
-    del bx_ivl
     intersect_bed = get_intersect(raw_bed_df['region'], overlap)
     intersect_df = get_intersect_df(intersect_bed)
 

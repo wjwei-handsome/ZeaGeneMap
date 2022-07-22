@@ -17,7 +17,7 @@ import os
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(BASE_DIR)
 from src.utils import utils
-from src.utils.logger import print
+from src.utils.logger import pretty_print
 
 
 LEGAL_EVIDENCES = ['rbh', 'crossmap', 'synteny', 'ortholog']
@@ -67,11 +67,7 @@ def get_args():
     return parser.parse_args()
 
 
-def main():
-    print(LOGO)
-    # get args
-    args = get_args()
-
+def main(args):
     # judge the evidence
     utils.check_in_list(args.evidence_l, LEGAL_EVIDENCES,
                         print_list=True)
@@ -89,4 +85,7 @@ def main():
 # TODO: README 4) 学会单元测试 5) 学会setup 6)发布
 
 if __name__ == '__main__':
-    main()
+    pretty_print(LOGO)
+    # get args
+    args = get_args()
+    main(args)

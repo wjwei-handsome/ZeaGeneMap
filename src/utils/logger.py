@@ -9,4 +9,4 @@ logging.basicConfig(level=logging.DEBUG,
                     datefmt='%Y-%m-%d %H:%M:%S',
                     handlers=[RichHandler(rich_tracebacks=True)])
 logger = logging.getLogger("GeneMap")
-print = print.__call__
+pretty_print = print.__call__

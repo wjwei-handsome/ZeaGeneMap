@@ -128,11 +128,11 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-# csv, tsv, bed, chain.gz, ...
-*.csv
-*.tsv
-*.bed
-*.chain.gz
-*.genelist
-*.blast
-*.anchor
+# # csv, tsv, bed, chain.gz, ...
+# *.csv
+# *.tsv
+# *.bed
+# *.chain.gz
+# *.genelist
+# *.blast
+# *.anchor

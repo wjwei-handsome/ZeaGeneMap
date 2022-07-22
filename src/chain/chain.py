@@ -1,5 +1,3 @@
-# from ..utils.utils import reader
-from tqdm import tqdm
 from src.utils import utils
 from bx.intervals.intersection import Interval, Intersecter
 from rich.progress import track
