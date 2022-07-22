@@ -35,8 +35,10 @@ def search_file(work_dir: str,
     if type == 'rec':
         forward_fp = f"{query_g}.{target_g}.{surfix}"
         reverse_fp = f"{target_g}.{query_g}.{surfix}"
-        fw_search = glob.glob(f"{abs_dir_path}/**/{forward_fp}")
-        rv_search = glob.glob(f"{abs_dir_path}/**/{reverse_fp}")
+        fw_search = glob.glob(
+            f"{abs_dir_path}/**/{forward_fp}", recursive=True)
+        rv_search = glob.glob(
+            f"{abs_dir_path}/**/{reverse_fp}", recursive=True)
         if len(fw_search) == 1 and len(rv_search) == 1:
             return fw_search[0], rv_search[0]
         else:
@@ -45,14 +47,16 @@ def search_file(work_dir: str,
     elif type == 'single':
         if query_g and target_g:
             chain_fp = f"{query_g}.{target_g}.{surfix}"
-            chain_search = glob.glob(f"{abs_dir_path}/**/{chain_fp}")
+            chain_search = glob.glob(
+                f"{abs_dir_path}/**/{chain_fp}", recursive=True)
             if len(chain_search) == 1:
                 return chain_search[0]
             else:
                 _error(
                     f"{chain_fp} not found or duplicated in your work dir : {abs_dir_path}")
         single_fp = f"{single_g}.{surfix}"
-        single_search = glob.glob(f"{abs_dir_path}/**/{single_fp}")
+        single_search = glob.glob(
+            f"{abs_dir_path}/**/{single_fp}", recursive=True)
         if len(single_search) == 1:
             return single_search[0]
         else:
@@ -60,7 +64,8 @@ def search_file(work_dir: str,
                 f"{single_fp} not found or duplicated in your work dir : {abs_dir_path}")
     elif type == 'ortholog':
         ortholog_fp = f"rthogroups.{surfix}"
-        ortholog_search = glob.glob(f"{abs_dir_path}/**/?{ortholog_fp}")
+        ortholog_search = glob.glob(
+            f"{abs_dir_path}/**/?{ortholog_fp}", recursive=True)
         if len(ortholog_search) == 1:
             return ortholog_search[0]
         else:
