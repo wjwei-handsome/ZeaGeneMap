@@ -1,5 +1,6 @@
 import pandas as pd
 from ..utils.utils import search_file
+from src.utils.logger import logger
 
 
 def map_str_list(x: str) -> list:
@@ -16,7 +17,8 @@ def get_ortholog_df(query_g: str, target_g: str, work_dir: str):
     get ortholog df
     """
     ortholog_fp = search_file(work_dir, 'tsv', type='ortholog')
-    print(f"find:\n ortholog_fp: {ortholog_fp}")
+    logger.info('Start to combine ortholog evidence')
+    logger.info(f"Searching Files:\n ortholog file: {ortholog_fp}")
     used_cols = [query_g, target_g]
     ortholog_df = pd.read_csv(ortholog_fp, sep='\t', header=0,
                               usecols=used_cols)[used_cols]

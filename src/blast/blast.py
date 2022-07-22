@@ -1,6 +1,5 @@
 import pandas as pd
-import logging
-
+from src.utils.logger import logger
 from ..utils.utils import search_file
 
 
@@ -19,8 +18,9 @@ from ..utils.utils import search_file
 def get_rbh_df(query_g: str, target_g: str, work_dir: str, e_filter: float = 1e-10) -> pd.DataFrame:
     q_t_blast_fp, t_q_blast_fp = search_file(
         work_dir, 'blast', query_g, target_g, type='rec')
-    print(
-        f'find:\n q_t_blast_fp: {q_t_blast_fp}\n t_q_blast_fp: {t_q_blast_fp}')
+    logger.info('Start to combine rbh evidence')
+    logger.info(
+        f'Searching Files:\n query -> target blast file: {q_t_blast_fp}\n target -> query blast file: {t_q_blast_fp}')
     fwd_df = pd.read_csv(q_t_blast_fp, sep='\t', header=None)
     rev_df = pd.read_csv(t_q_blast_fp, sep='\t', header=None)
     column_names = ['qseqid', 'sseqid', 'pident', 'length', 'mismatch',

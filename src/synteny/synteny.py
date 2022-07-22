@@ -1,14 +1,15 @@
 import pandas as pd
-import logging
 
 from ..utils.utils import search_file
+from src.utils.logger import logger
 
 
 def get_rec_syn_df(query_g: str, target_g: str, work_dir: str) -> pd.DataFrame:
     q_t_synteny_fp, t_q_synteny_fp = search_file(
         work_dir, 'anchor', query_g, target_g, type='rec')
-    print(
-        f'find:\n q_t_synteny_fp: {q_t_synteny_fp}\n t_q_synteny_fp: {t_q_synteny_fp}')
+    logger.info('Start to combine syteny evidence')
+    logger.info(
+        f'Searching Files:\n query -> target synteny file: {q_t_synteny_fp}\n target -> query synteny file: {t_q_synteny_fp}')
     exclude_fwd = [i for i, line in enumerate(
         open(q_t_synteny_fp)) if line.startswith('#')]
     exclude_rev = [i for i, line in enumerate(

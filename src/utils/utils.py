@@ -3,14 +3,27 @@ import urllib
 import gzip
 import bz2
 import sys
-import logging
 import os
 import glob
 import time
 import pandas as pd
 from tqdm import tqdm
+from src.utils.logger import logger
 
-tqdm.pandas()
+tqdm.pandas(desc='Processing', colour='green')
+
+
+def _warn(msg):
+    logger.warning(f"{msg}")
+
+
+def _error(msg):
+    logger.error(f"{msg}")
+    sys.exit(1)
+
+
+def _info(msg):
+    logger.info(f"{msg}")
 
 
 def search_file(work_dir: str,
@@ -27,32 +40,34 @@ def search_file(work_dir: str,
         if len(fw_search) == 1 and len(rv_search) == 1:
             return fw_search[0], rv_search[0]
         else:
-            exit(1)
+            _error(
+                f"{forward_fp} or {reverse_fp} not found or duplicated in your work dir : {abs_dir_path}")
     elif type == 'single':
         if query_g and target_g:
             chain_fp = f"{query_g}.{target_g}.{surfix}"
-            print(chain_fp)
             chain_search = glob.glob(f"{abs_dir_path}/**/{chain_fp}")
-            print(chain_search)
             if len(chain_search) == 1:
                 return chain_search[0]
             else:
-                print('ss')
-                exit(1)
+                _error(
+                    f"{chain_fp} not found or duplicated in your work dir : {abs_dir_path}")
         single_fp = f"{single_g}.{surfix}"
         single_search = glob.glob(f"{abs_dir_path}/**/{single_fp}")
         if len(single_search) == 1:
             return single_search[0]
         else:
-            exit(1)
+            _error(
+                f"{single_fp} not found or duplicated in your work dir : {abs_dir_path}")
     elif type == 'ortholog':
-        search = glob.glob(f"{abs_dir_path}/**/?rthogroups.{surfix}")
-        if len(search) == 1:
-            return search[0]
+        ortholog_fp = f"rthogroups.{surfix}"
+        ortholog_search = glob.glob(f"{abs_dir_path}/**/?{ortholog_fp}")
+        if len(ortholog_search) == 1:
+            return ortholog_search[0]
         else:
-            exit(1)
+            _error(
+                f"O[o]{ortholog_fp} not found or duplicated in your work dir : {abs_dir_path}")
     else:
-        logging.error('type error')
+        _error('type error, contact the author')
 
 
 def nopen(f, mode="rb"):
@@ -77,10 +92,9 @@ def reader(fname):
 
 def check_in_list(choice_list, legal_list, print_list: bool = True):
     if print_list:
-        print(f"choiced evidence: {choice_list}")
+        _info(f"choiced evidence: {choice_list}")
     if any(item not in legal_list for item in choice_list):
-        logging.error(f'evidence error: please select in {legal_list}')
-        exit(1)
+        _error(f'evidence error: please select in {legal_list}')
 
 
 def get_time(func):
@@ -89,16 +103,20 @@ def get_time(func):
         start = time.time()
         res = func(*args, **kwargs)
         end = time.time()
-        print(f"{func.__name__} cost {end - start}s")
+        _info(f"Combine {func.__name__} evidenve cost {end - start}s ✅")
         return res
     return wrapper
 
 
-def get_raw_df(genelist_fp) -> pd.DataFrame:
+def get_raw_df(genelist_fp: str) -> pd.DataFrame:
     # read input gene list
-    raw_df = pd.read_csv(genelist_fp, sep='\t', header=None)
-    # FIXME: check the format
-    assert raw_df.shape[1] == 1, 'genelist file format error'
+    try:
+        raw_df = pd.read_csv(genelist_fp, sep='\t', header=None)
+        _info(f"Read input genelist: {genelist_fp} ✅")
+    except Exception as e:
+        _error(f"Read {genelist_fp} failed, please check the file")
+    if not raw_df.shape[1] == 1:
+        _error('genelist file format error, except one column only')
     raw_df.columns = ['genename']
     return raw_df
 
@@ -120,7 +138,7 @@ def ortholog(args, raw_df):
     raw_ortholog_merge = pd.merge(
         raw_df, ortholog_df, on='genename', how='left')
     if len(raw_ortholog_merge) != len(raw_df):
-        exit(1)
+        _error("Ortholog evidence error")
     return raw_ortholog_merge
 
 
@@ -154,25 +172,25 @@ def get_raw_evd_df(args, raw_df, write: bool = True) -> pd.DataFrame:
         output_df = rbh(args, raw_df)
     else:
         output_df = raw_df
-        print('rbh not in evidence list')
+        _warn('rbh not in evidence list')
     # 2 ortholog
     if 'ortholog' in args.evidence_l:
         output_df = ortholog(args, output_df)
     else:
-        print('ortholog not in evidence list')
+        _warn('ortholog not in evidence list')
     # 3 synteny
     if 'synteny' in args.evidence_l:
         output_df = synteny(args, output_df)
     else:
-        print('synteny not in evidence list')
+        _warn('synteny not in evidence list')
     # 4 crossmap
     if 'crossmap' in args.evidence_l:
         output_df = crossmap(args, output_df)
     else:
-        print('crossmap not in evidence list')
+        _warn('crossmap not in evidence list')
     output_df.fillna('None', inplace=True)
     if write:
-        print(f'Writing raw result to {args.output}_raw.tsv')
+        _info(f'Writing raw result to {args.output}_raw.tsv')
         output_df.to_csv(
             f"{args.output}_raw.tsv", sep='\t', index=False, header=True)
     return output_df
@@ -186,23 +204,24 @@ def map_to_list(x):
             if g not in lst:
                 lst.append(g)
         return lst
-    # if x == 'NoneRegion':
-    #     return 'None'
+    if x == 'NoneRegion':
+        return ['None']
     else:
         return [item.strip() for item in x.split(',')]
 
 
 def process_raw(args, raw_evd_df: pd.DataFrame) -> None:
-    print(f'Process raw result to final result: {args.output}_final.tsv')
+    _info(f'Process raw result to final result')
     process_df = raw_evd_df.melt(
         id_vars=['genename'], var_name='evd', value_name='target')
     process_df['target'] = process_df['target'].progress_apply(map_to_list)
     process_df = process_df.explode('target')
     process_df = process_df.drop(
         process_df[process_df.target == 'None'].index).reset_index(drop=True)
-    process_df = process_df.drop(
-        process_df[process_df.target == 'NoneRegion'].index).reset_index(drop=True)
+    # process_df = process_df.drop(
+    #     process_df[process_df.target == 'NoneRegion'].index).reset_index(drop=True)
     result_df = process_df.groupby(['genename', 'target'], as_index=False).agg({
         'evd': lambda x: ','.join(x)})
+    _info(f'Writing final result to {args.output}_final.tsv')
     result_df.to_csv(f'{args.output}_final.tsv',
                      sep='\t', index=False, header=True)
