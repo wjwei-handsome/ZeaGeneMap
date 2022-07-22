@@ -34,8 +34,6 @@ LOGO = """[bold green]
 demo: python3 GeneMap.py -l list.txt -d work_dir -q GenomeA -t GenomeB -o output_prefix
 """
 
-USAGE_DEMO = "python3 GeneMap.py -l list.txt -d work_dir -q GenomeA -t GenomeB -o output_prefix"
-
 
 def get_args():
     # define arguments
