@@ -10,13 +10,14 @@
 '''
 
 import argparse
-import logging
+
 import sys
 from typing import *
 import os
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(BASE_DIR)
 from src.utils import utils
+from src.utils.logger import logger
 
 
 LEGAL_EVIDENCES = ['rbh', 'crossmap', 'synteny', 'ortholog']
@@ -52,11 +53,13 @@ def get_args():
 
 
 def main():
+    logger.info('start')
     # get args
     args = get_args()
 
     # judge the evidence
-    utils.check_in_list(args.evidence_l, LEGAL_EVIDENCES)
+    utils.check_in_list(args.evidence_l, LEGAL_EVIDENCES,
+                        print_list=True)
 
     # get raw genelist df
     raw_df = utils.get_raw_df(args.list)
@@ -68,7 +71,7 @@ def main():
     utils.process_raw(args, raw_evd_df)
 
 
-# TODO: 3） 修改print为log 4) 学会单元测试 5) 学会setup 6)
+# TODO: 3)写README 4) 学会单元测试 5) 学会setup 6)发布
 
 if __name__ == '__main__':
     main()
