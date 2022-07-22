@@ -1,13 +1,11 @@
 import sys
 import pandas as pd
 import pybedtools
-from src.zgmmodule.chain import chain
-from tqdm import tqdm
+from zgmmodule.chain import chain
 
-from utils.utils import search_file
-from utils.logger import logger
+from zgmmodule.utils.utils import search_file
+from zgmmodule.utils.logger import logger
 
-tqdm.pandas(desc='Processing', colour='green')
 
 NULL_REGION = 'chrnull\t0\t0\t+'
 

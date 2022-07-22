@@ -8,7 +8,7 @@ import glob
 import time
 import pandas as pd
 from tqdm import tqdm
-from src.zgmmodule.utils.logger import logger, console
+from zgmmodule.utils.logger import logger, console
 
 tqdm.pandas(desc='Processing', colour='green')
 
@@ -128,7 +128,7 @@ def get_raw_df(genelist_fp: str) -> pd.DataFrame:
 
 @get_time
 def rbh(args, raw_df):
-    from src.zgmmodule.blast import blast
+    from zgmmodule.blast import blast
     rbh_df = blast.get_rbh_df(args.query_g, args.target_g, args.dir)
     raw_rbh_merge = pd.merge(
         raw_df, rbh_df, on='genename', how='left')
@@ -137,7 +137,7 @@ def rbh(args, raw_df):
 
 @get_time
 def ortholog(args, raw_df):
-    from src.zgmmodule.ortholog import ortholog
+    from zgmmodule.ortholog import ortholog
     ortholog_df = ortholog.get_ortholog_df(
         args.query_g, args.target_g, args.dir)
     raw_ortholog_merge = pd.merge(
@@ -149,7 +149,7 @@ def ortholog(args, raw_df):
 
 @get_time
 def synteny(args, raw_df):
-    from src.zgmmodule.synteny import synteny
+    from zgmmodule.synteny import synteny
     rec_syn_df = synteny.get_rec_syn_df(
         args.query_g, args.target_g, args.dir)
     raw_syn_merge = pd.merge(
@@ -159,7 +159,7 @@ def synteny(args, raw_df):
 
 @get_time
 def crossmap(args, raw_df):
-    from src.zgmmodule.chain import crossmap
+    from zgmmodule.chain import crossmap
     crossmap_df = crossmap.get_crossmap_df(
         raw_df, args.query_g,
         args.target_g, args.dir,

@@ -15,9 +15,9 @@ import sys
 from typing import *
 import os
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-sys.path.append(BASE_DIR)
-from utils import utils
-from utils.logger import pretty_print
+sys.path.append(BASE_DIR + '/src/')
+from zgmmodule.utils import utils
+from zgmmodule.utils.logger import pretty_print
 
 
 LEGAL_EVIDENCES = ['rbh', 'crossmap', 'synteny', 'ortholog']
