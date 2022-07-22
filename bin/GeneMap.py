@@ -31,13 +31,17 @@ LOGO = """[bold green]
  \____/\___|_| |_|\___\_|  |_/\__,_| .__/ |
                                    | |    |
                                    |_|    |
+demo: python3 GeneMap.py -l list.txt -d work_dir -q GenomeA -t GenomeB -o output_prefix
 """
+
+USAGE_DEMO = "python3 GeneMap.py -l list.txt -d work_dir -q GenomeA -t GenomeB -o output_prefix"
 
 
 def get_args():
     # define arguments
     parser = argparse.ArgumentParser(
-        description=__doc__, prog='GeneMap.py')
+        description=None, prog='GeneMap.py',
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
     # required arguments
     required_parser = parser.add_argument_group('required arguments')
@@ -55,7 +59,7 @@ def get_args():
     # options arguments
     option_parser = parser.add_argument_group('optional arguments')
     option_parser.add_argument('-e', '--evidence',
-                               help='evidence list', nargs='+', dest='evidence_l',
+                               help="evidence list", nargs='+', dest='evidence_l',
                                default=['rbh', 'crossmap', 'synteny', 'ortholog'])
     option_parser.add_argument('-r', '--ratio', action='store',
                                help='crossmap ratio', default=0.8, dest='ratio')
@@ -84,7 +88,7 @@ def main():
     utils.process_raw(args, raw_evd_df)
 
 
-# TODO: 3)写README 4) 学会单元测试 5) 学会setup 6)发布
+# TODO: README 4) 学会单元测试 5) 学会setup 6)发布
 
 if __name__ == '__main__':
     main()
