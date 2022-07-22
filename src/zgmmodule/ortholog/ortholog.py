@@ -1,6 +1,6 @@
 import pandas as pd
-from src.utils.utils import search_file
-from src.utils.logger import logger
+from utils.utils import search_file
+from utils.logger import logger
 
 
 def map_str_list(x: str) -> list:

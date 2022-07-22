@@ -1,4 +1,4 @@
-from src.utils import utils
+from utils import utils
 from bx.intervals.intersection import Interval, Intersecter
 from rich.progress import track
 

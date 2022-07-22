@@ -16,8 +16,8 @@ from typing import *
 import os
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(BASE_DIR)
-from src.utils import utils
-from src.utils.logger import pretty_print
+from utils import utils
+from utils.logger import pretty_print
 
 
 LEGAL_EVIDENCES = ['rbh', 'crossmap', 'synteny', 'ortholog']
