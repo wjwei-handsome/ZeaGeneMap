@@ -1,11 +1,13 @@
+import sys
 import pandas as pd
 import pybedtools
 from src.chain import chain
 from tqdm import tqdm
 
 from ..utils.utils import search_file
+from src.utils.logger import logger
 
-tqdm.pandas()
+tqdm.pandas(desc='Processing', colour='green')
 
 NULL_REGION = 'chrnull\t0\t0\t+'
 
@@ -25,13 +27,13 @@ def get_region(x, min_ratio: float = 0.8):
         return region
     if len(matches) > 2:
         query_m = matches[::2]
-        query_m_nt = sum([i[2]-i[1] for i in query_m])  # sum([3,2])
+        query_m_nt = sum([i[2] - i[1] for i in query_m])  # sum([3,2])
         target_m = matches[1::2]
         target_m_chroms = set([i[0] for i in target_m])
         target_m_starts = [i[1] for i in target_m]
         target_m_ends = [i[2] for i in target_m]
         target_m_strand = set([i[3] for i in target_m]).pop()
-        map_ratio = query_m_nt/(end-start)
+        map_ratio = query_m_nt / (end - start)
         if map_ratio >= min_ratio:
             if len(target_m_chroms) == 1:
                 target_m_chrom = target_m_chroms.pop()
@@ -118,14 +120,15 @@ def get_crossmap_df(raw_df: pd.DataFrame,
                     overlap: float = 0.8):
     chain_fp = search_file(work_dir, 'chain.gz',
                            query_g=query_g, target_g=target_g, type='single')
-    print(f"find chain file: {chain_fp}")
+    logger.info('Start to combine crossmap evidence')
+    logger.info(f"Searching Files:\n chain file: {chain_fp}")
+    logger.info(f"Reading chain file: {chain_fp}")
     global bx_ivl
     bx_ivl = chain.read_chain_file(chain_fp)[0]
-    print('readed chain file')
     q_bed_fp = search_file(work_dir, 'bed', single_g=query_g, type='single')
-    print(f"finded query_bed:{q_bed_fp}")
+    logger.info(f"Searching Files:\n query genome bed file:{q_bed_fp}")
     t_bed_fp = search_file(work_dir, 'bed', single_g=target_g, type='single')
-    print(f"finded target_bed:{t_bed_fp}")
+    logger.info(f"Searching Files:\n taget genome bed file: {t_bed_fp}")
     q_bed_df = pd.read_csv(q_bed_fp, sep='\t', header=None)
     q_bed_df.columns = ['chrom', 'start', 'end', 'genename', 'junk', 'strand']
     raw_bed_df = pd.merge(raw_df, q_bed_df, on='genename',
@@ -142,7 +145,8 @@ def get_crossmap_df(raw_df: pd.DataFrame,
     if len(intersect_df) == len(raw_bed_df):
         return pd.concat([raw_bed_df['genename'], intersect_df], axis=1)
     else:
-        exit('intersect_df and raw_bed_df have different length')
+        logger.error('intersect_df and raw_bed_df have different length')
+        sys.exit(1)
 
     # raw_bed_df['crossmap'] = raw_bed_df['region'].progress_apply(
     #     string_bed_ivl, args=(overlap,))

@@ -1,6 +1,6 @@
 # from ..utils.utils import reader
+from tqdm import tqdm
 from src.utils import utils
-import logging
 from bx.intervals.intersection import Interval, Intersecter
 
 
@@ -32,14 +32,13 @@ def read_chain_file(chain_file, print_table=False):
             Chromosome sizes of source genome
     '''
 
-    logging.info("Read the chain file \"%s\" " % chain_file)
     maps = {}
     target_chromSize = {}
     source_chromSize = {}
     if print_table:
         blocks = []
-
-    for line in utils.reader(chain_file):
+    total_size = len(list(utils.reader(chain_file)))
+    for line in tqdm(utils.reader(chain_file), desc="Reading", colour="green", total=total_size):
         # Example: chain 4900 chrY 58368225 + 25985403 25985638 chr5 151006098 - 43257292 43257528 1
         if not line.strip():
             continue
@@ -63,13 +62,13 @@ def read_chain_file(chain_file, print_table=False):
             target_size = int(fields[8])  # Full length of the chromosome
             target_strand = fields[9]	  # + or -
             target_start = int(fields[10])
-            #target_end = int(fields[11])
+            # target_end = int(fields[11])
             target_chromSize[target_name] = target_size
             source_chromSize[source_name] = source_size
 
             if target_strand not in ['+', '-']:
                 raise Exception("Target strand must be - or +. (%s)" % line)
-            #chain_id = None if len(fields) == 12 else fields[12]
+            # chain_id = None if len(fields) == 12 else fields[12]
             if source_name not in maps:
                 maps[source_name] = Intersecter()
 
@@ -80,18 +79,18 @@ def read_chain_file(chain_file, print_table=False):
             size, sgap, tgap = int(fields[0]), int(fields[1]), int(fields[2])
             if print_table:
                 if target_strand == '+':
-                    blocks.append((source_name, sfrom, sfrom+size, source_strand,
-                                  target_name, tfrom, tfrom+size, target_strand))
+                    blocks.append((source_name, sfrom, sfrom + size, source_strand,
+                                  target_name, tfrom, tfrom + size, target_strand))
                 elif target_strand == '-':
-                    blocks.append((source_name, sfrom, sfrom+size, source_strand, target_name,
-                                  target_size - (tfrom+size), target_size - tfrom, target_strand))
+                    blocks.append((source_name, sfrom, sfrom + size, source_strand, target_name,
+                                  target_size - (tfrom + size), target_size - tfrom, target_strand))
 
             if target_strand == '+':
                 maps[source_name].add_interval(
-                    Interval(sfrom, sfrom+size, (target_name, tfrom, tfrom+size, target_strand)))
+                    Interval(sfrom, sfrom + size, (target_name, tfrom, tfrom + size, target_strand)))
             elif target_strand == '-':
                 maps[source_name].add_interval(Interval(
-                    sfrom, sfrom+size, (target_name, target_size - (tfrom+size), target_size - tfrom, target_strand)))
+                    sfrom, sfrom + size, (target_name, target_size - (tfrom + size), target_size - tfrom, target_strand)))
 
             sfrom += size + sgap
             tfrom += size + tgap
@@ -100,18 +99,18 @@ def read_chain_file(chain_file, print_table=False):
             size = int(fields[0])
             if print_table:
                 if target_strand == '+':
-                    blocks.append((source_name, sfrom, sfrom+size, source_strand,
-                                  target_name, tfrom, tfrom+size, target_strand))
+                    blocks.append((source_name, sfrom, sfrom + size, source_strand,
+                                  target_name, tfrom, tfrom + size, target_strand))
                 elif target_strand == '-':
-                    blocks.append((source_name, sfrom, sfrom+size, source_strand, target_name,
-                                  target_size - (tfrom+size), target_size - tfrom, target_strand))
+                    blocks.append((source_name, sfrom, sfrom + size, source_strand, target_name,
+                                  target_size - (tfrom + size), target_size - tfrom, target_strand))
 
             if target_strand == '+':
                 maps[source_name].add_interval(
-                    Interval(sfrom, sfrom+size, (target_name, tfrom, tfrom+size, target_strand)))
+                    Interval(sfrom, sfrom + size, (target_name, tfrom, tfrom + size, target_strand)))
             elif target_strand == '-':
                 maps[source_name].add_interval(Interval(
-                    sfrom, sfrom+size, (target_name, target_size - (tfrom+size), target_size - tfrom, target_strand)))
+                    sfrom, sfrom + size, (target_name, target_size - (tfrom + size), target_size - tfrom, target_strand)))
         else:
             raise Exception("Invalid chain format. (%s)" % line)
     # if (sfrom + size) != source_end  or (tfrom + size) != target_end:
@@ -205,7 +204,7 @@ def map_coordinates(mapping, q_chr, q_start, q_end, q_strand='+'):
         (chr, real_start, real_end) = intersectBed(
             (q_chr, q_start, q_end), (q_chr, s_start, s_end))
         l_offset = abs(real_start - s_start)
-        #r_offset = real_end - s_end
+        # r_offset = real_end - s_end
         size = abs(real_end - real_start)
 
         matches.append((chr, real_start, real_end, q_strand))
@@ -219,9 +218,9 @@ def map_coordinates(mapping, q_chr, q_start, q_end, q_strand='+'):
         elif t_strand == '-':
             i_start = t_end - l_offset - size
             if q_strand == '+':
-                matches.append((t_chrom, i_start,	i_start + size, t_strand))
+                matches.append((t_chrom, i_start, i_start + size, t_strand))
             else:
-                matches.append((t_chrom, i_start,	i_start +
+                matches.append((t_chrom, i_start, i_start +
                                size, complement[t_strand]))
         else:
             raise Exception(
@@ -241,7 +240,7 @@ def map_coordinates(mapping, q_chr, q_start, q_end, q_strand='+'):
                 (q_chr, q_start, q_end), (q_chr, s_start, s_end))
 
             l_offset = abs(real_start - s_start)
-            #r_offset = abs(real_end - s_end)
+            # r_offset = abs(real_end - s_end)
             size = abs(real_end - real_start)
             matches.append((chr, real_start, real_end, q_strand))
             if t_strand == '+':
@@ -256,10 +255,10 @@ def map_coordinates(mapping, q_chr, q_start, q_end, q_strand='+'):
                 i_start = t_end - l_offset - size
                 if q_strand == '+':
                     matches.append(
-                        (t_chrom, i_start,	i_start + size, t_strand))
+                        (t_chrom, i_start, i_start + size, t_strand))
                 else:
                     matches.append(
-                        (t_chrom, i_start,	i_start + size, complement[t_strand]))
+                        (t_chrom, i_start, i_start + size, complement[t_strand]))
             else:
                 raise Exception(
                     "Unknown strand: %s. Can only be '+' or '-'." % q_strand)
