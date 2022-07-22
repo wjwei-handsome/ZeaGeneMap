@@ -1,7 +1,7 @@
 import pandas as pd
 
-from utils.utils import search_file
-from utils.logger import logger
+from zgmmodule.utils.utils import search_file
+from zgmmodule.utils.logger import logger
 
 
 def get_rec_syn_df(query_g: str, target_g: str, work_dir: str) -> pd.DataFrame:

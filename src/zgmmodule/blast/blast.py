@@ -1,6 +1,6 @@
 import pandas as pd
-from utils.logger import logger
-from utils.utils import search_file
+from zgmmodule.utils.logger import logger
+from zgmmodule.utils.utils import search_file
 
 
 # def get_rbh_result(gene_name, rbh_df):
