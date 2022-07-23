@@ -228,5 +228,5 @@ def process_raw(args, raw_evd_df: pd.DataFrame) -> None:
         result_df = process_df.groupby(['genename', 'target'], as_index=False).agg({
             'evd': lambda x: ','.join(x)})
         result_df.to_csv(
-            f"{args.output}_result.tsv", sep='\t', index=False, header=True)
+            f"{args.output}_final.tsv", sep='\t', index=False, header=True)
     _info(f'Writing final result to {args.output}_final.tsv')
