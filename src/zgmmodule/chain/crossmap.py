@@ -71,11 +71,11 @@ def get_region(x, min_ratio: float = 0.8):
 #     else:
 #         return 'None'
 
-def get_intersect(region_df: pd.DataFrame, overlap: float = 0.8) -> pybedtools.bedtool.BedTool:
+def get_intersect(bedstr_df: pd.DataFrame, overlap: float = 0.8) -> pybedtools.bedtool.BedTool:
     """
     Get intersect between target and query bed files.
     """
-    region_list = region_df.to_list()
+    region_list = bedstr_df.to_list()
     region_bed_str = '\n'.join(region_list)
     region_bed = pybedtools.bedtool.BedTool(region_bed_str, from_string=True)
     intersect_bed = region_bed.intersect(target_bed, nonamecheck=True,
@@ -92,21 +92,27 @@ def get_intersect_df(intersect_bed: pybedtools.bedtool.BedTool) -> pd.DataFrame:
     Returns:
         pd.DataFrame: _description_
     """
-    lst = []
+    result = {}
     for ivl in intersect_bed:
         chrom = ivl.chrom
         region_start, region_end = ivl.start, ivl.end
-        gene_start, gene_end = ivl.fields[5:7]
+        gene_start, gene_end = ivl.fields[6:8]
+        query = ivl.fields[4]
         if chrom == 'chrnull':
-            lst.append('NoneRegion')
+            result[query] = 'NoneRegion'
         else:
             if gene_start == '-1' or gene_end == '-1':
-                lst.append(f'{chrom}:{region_start}-{region_end}')
+                result[query] = f'{chrom}:{region_start}-{region_end}'
             else:
-                target_gene = ivl.fields[7]
-                lst.append(
-                    f'{target_gene}@{chrom}:{max([region_start,int(gene_start)])}-{min([region_end,int(gene_end)])}')
-    df = pd.DataFrame(lst, columns=['crossmap'])
+                target_gene = ivl.fields[8]
+                target_str = f'{target_gene}@{chrom}:{max([region_start,int(gene_start)])}-{min([region_end,int(gene_end)])}'
+                if query not in result:
+                    result[query] = target_str
+                else:
+                    result[query] += ',' + target_str
+    result_dict = {'genename': list(result.keys()),
+                   'crossmap': list(result.values())}
+    df = pd.DataFrame(result_dict)
     return df
 
 
@@ -135,14 +141,17 @@ def get_crossmap_df(raw_df: pd.DataFrame,
     target_bed = pybedtools.BedTool(t_bed_fp).sort()
     raw_bed_df['region'] = raw_bed_df.apply(
         get_region, axis=1, args=(ratio,))
-    intersect_bed = get_intersect(raw_bed_df['region'], overlap)
+    raw_bed_df['bed_str'] = raw_bed_df['region'] + \
+        '\t' + raw_bed_df['genename']
+    intersect_bed = get_intersect(raw_bed_df['bed_str'], overlap)
     intersect_df = get_intersect_df(intersect_bed)
 
     # concat method
     if len(intersect_df) == len(raw_bed_df):
-        return pd.concat([raw_bed_df['genename'], intersect_df], axis=1)
+        return pd.concat([raw_bed_df['genename'], intersect_df['crossmap']], axis=1)
     else:
-        logger.error('intersect_df and raw_bed_df have different length')
+        logger.error(
+            'intersect_df and raw_bed_df have different length, please contact the author')
         sys.exit(1)
 
     # raw_bed_df['crossmap'] = raw_bed_df['region'].progress_apply(
